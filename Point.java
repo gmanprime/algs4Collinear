@@ -1,4 +1,4 @@
-/******************************************************************************
+/* *****************************************************************************
  *  Compilation:  javac Point.java
  *  Execution:    java Point
  *  Dependencies: none
@@ -60,19 +60,20 @@ public class Point implements Comparable<Point> {
      * @return the slope between this point and the specified point
      */
     public double slopeTo(Point that) {
+        // Determines Slope from This Point Object To a give point That
         if (x == that.x && y == that.y) {
+            // If the X and Y components of this point is equal to the coordinates of point "that"
             return Double.NEGATIVE_INFINITY;
-        }
-
-        if (x == that.x) {
+        } else if (x == that.x) {
+            // if this point is Directly Above or Below point "that"
             return Double.POSITIVE_INFINITY;
-        }
-
-        if (y == that.y) {
+        } else if (y == that.y) {
+            // if this point is Directly to the left or right of point "that"
             return +0.0;
+        } else {
+            // if non of the Above are true, then compute and return the Slope value
+            return (double) (that.y - y) / (that.x - x);
         }
-
-        return (double) (that.y - y) / (that.x - x);
     }
 
     /**
@@ -104,9 +105,20 @@ public class Point implements Comparable<Point> {
 
     private class SlopeOrderComparator implements Comparator<Point> {
 
+        /* Comparator class that provides Methods for:
+        *   1) compare two points in a custom order of values
+        *
+        */
         @Override
         public int compare(Point pt1, Point pt2) {
+            /* Compare the slope from this point to the two other points and return 1, 0, or -1
+            * depending on whether the slope increases, is equal to or decreases from the first
+            * slope value
+            *  */
+
+            // get the difference in slope
             double slopeDiff = slopeTo(pt1) - slopeTo(pt2);
+            // convert to 1,0, or -1 for greater than, equal to or less than and return value as int
             return (int) Math.signum(slopeDiff);
         }
     }

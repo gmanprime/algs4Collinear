@@ -4,13 +4,15 @@ import edu.princeton.cs.algs4.StdOut;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class FastCollinearPoints {
 
     private final ArrayList<LineSegment> lineSeg = new ArrayList<>();
-    private final HashMap<Double, List<Point>> slopeToEndPoints = new HashMap<>();
+    private DataManager matchingSlopePoints = new DataManager();
+
+    // private final HashMap<Double, List<Point>> slopeToEndPoints = new HashMap<>();
 
     /* Find all line segments containing 4 or more points */
 
@@ -31,7 +33,7 @@ public class FastCollinearPoints {
         for (int i = 0; i < orderedPoints.length; i++) {
 
             // sort array elements from i to the last element
-            // stable sort / Merge sort
+            // stable sort / Merge sort over default point values "y"
             Arrays.sort(orderedPoints, i, orderedPoints.length);
 
             // set current origin point
@@ -39,13 +41,20 @@ public class FastCollinearPoints {
 
             // Sorts the array from following position to end of array using custom comparator
             // i.e. sort by values above and by comparator values next
-            // stable sort / merge sort
+            // stable sort / Merge sort over default point values "x"
             Arrays.sort(orderedPoints, i + 1, orderedPoints.length, origin.slopeOrder());
 
+            /* @Observe i+1 index seems off. Investigate Further */
 
-            int counter = 0; // set up counter variable to count number of points in line segment
-            double prevSlope = Double.NaN; // Set the previous Slope value to NaN to Start
-            Point prevPoint = origin; // set the previous points as origin for future compares
+
+            // set up counter variable to count number of points in line segment
+            int counter = 0;
+
+            // Set the reference Slope value to NaN (Not a Number) to Start
+            double refSlope = Double.NaN;
+
+            // set the reference point to be the same as origin for future compares
+            Point refPt = origin;
 
             for (int j = i + 1; j < orderedPoints.length; j++) {
                 // nested for current i to end of ordered points list
@@ -53,46 +62,96 @@ public class FastCollinearPoints {
                 // set new variable pt tp the current array value
                 Point pt = orderedPoints[j];
 
-                // set the slope variable to the slope from origin to the point pt
+                // get slope from current origin to all following points
                 double slope = origin.slopeTo(pt);
 
                 // if the current slope is equal to the previous slope
-                if (Double.compare(slope, prevSlope) == 0) {
+                if (Double.compare(slope, refSlope) == 0) {
                     counter += 1; // increase number of points in line segment
                 } else {
                     // check if the number of points in line segment are already at 3 or greater
                     if (counter >= 3) {
-                        checkAndAdd(origin, prevPoint, prevSlope);
+                        checkAndAdd(origin, refPt, refSlope);
                     }
 
-                    prevSlope = slope;
+                    refSlope = slope;
                     counter = 1;
                 }
-                prevPoint = pt;
+                refPt = pt;
             }
 
             if (counter >= 3) {
-                checkAndAdd(origin, prevPoint, prevSlope);
+                checkAndAdd(origin, refPt, refSlope);
             }
+        }
+    }
+
+    private class DataManager {
+
+        private class DataNode {
+            private double key;
+            private ArrayList<Point> value;
+
+            public DataNode(double key) {
+                this.key = key;
+            }
+
+            public void setValue(ArrayList<Point> value) {
+                Collections.sort(value);
+                this.value = value;
+            }
+
+            public double getKey() {
+                return key;
+            }
+
+            public ArrayList<Point> getValue() {
+                return value;
+            }
+        }
+
+        // method to compare two points
+        private Comparator<DataNode> comp = (v1, v2) -> (int) Math.signum(v1.getKey() - v2.getKey());
+
+        private ArrayList<DataNode> dataCollection = new ArrayList<>();
+
+        public void put(double key, ArrayList<Point> value) {
+
+            DataNode input = new DataNode(key);
+            input.setValue(value);
+
+            dataCollection.add(input);
+        }
+
+        public ArrayList<Point> get(double query) {
+            int index = Collections.binarySearch(dataCollection, new DataNode(query), comp);
+            return dataCollection.get(index).getValue();
         }
     }
 
     private void checkAndAdd(Point start, Point end, double slope) {
 
-        List<Point> ptExist = slopeToEndPoints.get(slope);
+        // get all points in Hashmap with a certain slope
+        ArrayList<Point> ptExist = matchingSlopePoints.get(slope);
 
+        // If there are no points with the given Slope value:
         if (ptExist == null) {
-            ptExist = new ArrayList<>(); // empty the array
-            ptExist.add(end);
+            ptExist = new ArrayList<>(); // set the point list of points with certain slopes to empty array
+            ptExist.add(end); // add the End point to the array
 
-            slopeToEndPoints.put(slope, ptExist);
+            // add ptExist to Hashmap with the slope Key
+            matchingSlopePoints.put(slope, ptExist);
 
+            // add a new line segment that goes from start to end
             lineSeg.add(new LineSegment(start, end));
         } else {
+            // if the list of points with slope "slope" do exist
+            // and if the the list of points with slope "slope" dont contain the end point
             if (!ptExist.contains(end)) {
                 // add if point is non existent
-                ptExist.add(end);
+                ptExist.add(end); // add the end points with slope "slope"
 
+                // create a new line segment going from start to end
                 lineSeg.add(new LineSegment(start, end));
             }
         }
