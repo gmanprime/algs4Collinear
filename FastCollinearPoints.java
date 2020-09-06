@@ -10,7 +10,7 @@ import java.util.Comparator;
 public class FastCollinearPoints {
 
     private final ArrayList<LineSegment> lineSeg = new ArrayList<>();
-    private DataManager matchingSlopePoints = new DataManager();
+    private final DataManager matchingSlopePoints = new DataManager();
 
     // private final HashMap<Double, List<Point>> slopeToEndPoints = new HashMap<>();
 
@@ -89,7 +89,7 @@ public class FastCollinearPoints {
     private class DataManager {
 
         private class DataNode {
-            private double key;
+            private final double key;
             private ArrayList<Point> value;
 
             public DataNode(double key) {
@@ -111,9 +111,9 @@ public class FastCollinearPoints {
         }
 
         // method to compare two points
-        private Comparator<DataNode> comp = (v1, v2) -> (int) Math.signum(v1.getKey() - v2.getKey());
+        private final Comparator<DataNode> comp = (v1, v2) -> (int) Math.signum(v1.getKey() - v2.getKey());
 
-        private ArrayList<DataNode> dataCollection = new ArrayList<>();
+        private final ArrayList<DataNode> dataCollection = new ArrayList<>();
 
         public void put(double key, ArrayList<Point> value) {
 
